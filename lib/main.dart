@@ -1,9 +1,13 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:password_pool/UserModel.dart';
 import 'dart:math';
 import 'package:provider/provider.dart';
 
 import 'AppTheme.dart';
+import 'database_service.dart';
+
+
 
 void main() {
   runApp(MyApp());
@@ -82,6 +86,8 @@ class MyAppState extends ChangeNotifier {
   String _randomNonAlpha = randomNonAlphaNumeric();
   bool _isDarkMode = false;
 
+  final _databaseService = DatabaseService();
+
   String get current => _current;
 
   void _updateCurrent(String newCurrent) {
@@ -131,24 +137,39 @@ class MyAppState extends ChangeNotifier {
 
   bool get isFavorited => _isFavorited;
 
-  void addToFavorites() {
+  Future<void> addToFavorites() async {
     final favorite = Favorite(
         current: _current,
         randomNumbers: _randomNumbers,
         randomNonAlpha: _randomNonAlpha);
+
     if (favorites.contains(favorite)) {
       favorites.remove(favorite);
+      await _databaseService.deletePasswordField('${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}');
+      await _databaseService.getAllPasswords();
       _isFavorited = false;
     } else {
       favorites.add(favorite);
       _isFavorited = true;
+      final password = PasswordModel(
+        password: '${favorite.current}-${favorite.randomNumbers}-${favorite.randomNonAlpha}',
+      );
+      await _databaseService.insertPasswordField(password);
+      await _databaseService.getAllPasswords();
+      // await _databaseService.dropTable();
     }
     notifyListeners();
   }
 
-  void removeFromFavorites(int index) {
+  void removeFromFavorites(int index) async{
     if (index >= 0 && index < favorites.length) {
+      final favorite = favorites[index];
+      final stringToRemove = favorite.current+favorite.randomNumbers+favorite.randomNonAlpha;
+      print("string to delete: $stringToRemove");
       favorites.removeAt(index);
+      await _databaseService.deletePasswordField(stringToRemove);
+      await _databaseService.getAllPasswords();
+      // await _databaseService.deleteAllField();
     }
     _isFavorited = false;
     notifyListeners();
