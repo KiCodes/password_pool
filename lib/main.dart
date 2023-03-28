@@ -147,19 +147,24 @@ class MyAppState extends ChangeNotifier {
 
   bool get isFavorited => _isFavorited;
 
+  void setPasswords(List<PasswordModel> passwords) {
+    _passwords = passwords;
+    notifyListeners();
+  }
+
   Future<void> addToFavorites() async {
     final favorite = Favorite(
         current: _current,
         randomNumbers: _randomNumbers,
         randomNonAlpha: _randomNonAlpha);
     final passwords = await _databaseService.getAllPasswords();
+    final password = PasswordModel(
+      password:
+      '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
+    );
 
     if (passwords.isEmpty){
       favorites.add(favorite);
-      final password = PasswordModel(
-        password:
-        '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
-      );
       _isFavorited = true;
 
       await _databaseService.insertPasswordField(password);
@@ -170,6 +175,7 @@ class MyAppState extends ChangeNotifier {
       //This .any will iterate through the passwords list and check if any of its elements have a password property equal to last_password.
       if (passwords.any((p) => p.password == last_password)) {
         favorites.remove(last_password);
+        _passwords.remove(password);
         await _databaseService.deletePasswordField(passwords.last.id!);
         await _databaseService.getAllPasswords();
         _isFavorited = false;
@@ -178,11 +184,6 @@ class MyAppState extends ChangeNotifier {
       else if (!passwords.any((p) => p.password == last_password)){
         favorites.add(favorite);
         _isFavorited = true;
-        final password = PasswordModel(
-          password:
-          '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
-        );
-
         await _databaseService.insertPasswordField(password);
         _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
         await _databaseService.getAllPasswords();
@@ -198,11 +199,15 @@ class MyAppState extends ChangeNotifier {
     final removeFromFavList = await _databaseService.getPasswordById(id);
     await _databaseService.deletePasswordField(id);
     await _databaseService.getAllPasswords();
-    _passwords.removeWhere((password) => password.id == id); // remove from _passwords
+    _passwords.remove(removeFromFavList); // remove from _passwords
     // await _databaseService.deleteAllField();
     favorites.remove(removeFromFavList);
 
-    _isFavorited = false;
+    if(removeFromFavList?.password == last_password){
+
+      _isFavorited = false;
+    }
+
     notifyListeners();
   }
 }
@@ -366,7 +371,6 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
-  List<PasswordModel> _passwords = [];
   final _databaseService = DatabaseService();
   int? _lastInsertedPasswordId;
 
@@ -379,11 +383,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
 // puts the all the passwords into the list _passwords
   Future<void> _loadPasswords() async {
+    final appState = context.read<MyAppState>();
     final passwords = await _databaseService.getAllPasswords();
     setState(() {
-      _passwords = passwords;
-      if (_passwords.isNotEmpty) {
-        _lastInsertedPasswordId = _passwords.last.id;
+      appState.setPasswords(passwords);
+      if (passwords.isNotEmpty) {
+        _lastInsertedPasswordId = passwords.last.id;
       }
     });
   }
@@ -392,8 +397,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     final appState = context.watch<MyAppState>();
+    final appStatepasswords = appState.passwords;
 
-    if (_passwords.isEmpty) {
+    if (appStatepasswords.isEmpty) {
       return Center(
         child: Text('No favorites yet.'),
       );
@@ -409,7 +415,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: GridView.builder(
-          itemCount: _passwords.length,
+          itemCount: appStatepasswords.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 1,
             childAspectRatio: 3,
@@ -417,7 +423,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             crossAxisSpacing: 6,
           ),
           itemBuilder: (context, index) {
-            final password = _passwords[index];
+            final password = appStatepasswords[index];
             return Card(
               elevation: 2,
               shadowColor: theme.colorScheme.tertiary,
@@ -435,7 +441,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   trailing: GestureDetector(
                     onTap: () {
                       appState.lastInsertedPasswordId = password.id!;
-                      appState.removeFromFavorites(password.id!);
+                      appState.removeFromFavorites(password.id!).then((value) {
+                        _loadPasswords();
+                      });
                     },
                     child: Icon(Icons.favorite, color: Colors.red),
                   ),
