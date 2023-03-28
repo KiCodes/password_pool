@@ -1,13 +1,11 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:password_pool/UserModel.dart';
+import 'package:password_pool/PasswordModel.dart';
 import 'dart:math';
 import 'package:provider/provider.dart';
 
 import 'AppTheme.dart';
 import 'database_service.dart';
-
-
 
 void main() {
   runApp(MyApp());
@@ -85,6 +83,13 @@ class MyAppState extends ChangeNotifier {
   String _randomNumbers = randomNumber().toString();
   String _randomNonAlpha = randomNonAlphaNumeric();
   bool _isDarkMode = false;
+  late int? _lastInsertedPasswordId = -1;
+
+  String last_password = '';
+
+  set lastInsertedPasswordId(int id) {
+    _lastInsertedPasswordId = id;
+  }
 
   final _databaseService = DatabaseService();
 
@@ -106,6 +111,8 @@ class MyAppState extends ChangeNotifier {
     _updateCurrent(randomCasing());
     _randomNumbers = randomNumber().toString();
     _randomNonAlpha = randomNonAlphaNumeric();
+
+    last_password = "$_current$_randomNumbers$_randomNonAlpha";
     final favorite = Favorite(
         current: _current,
         randomNumbers: _randomNumbers,
@@ -121,7 +128,7 @@ class MyAppState extends ChangeNotifier {
     for (int i = 0; i < originalWord.length; i++) {
       Random random = Random();
       int randomNumber =
-      random.nextInt(2); // generate a random number between 0 and 1
+          random.nextInt(2); // generate a random number between 0 and 1
       if (randomNumber == 0) {
         newWord += originalWord[i].toLowerCase();
       } else {
@@ -132,6 +139,9 @@ class MyAppState extends ChangeNotifier {
   }
 
   List<Favorite> favorites = [];
+  List<PasswordModel> _passwords = [];
+
+  List<PasswordModel> get passwords => _passwords;
 
   bool _isFavorited = false;
 
@@ -142,35 +152,56 @@ class MyAppState extends ChangeNotifier {
         current: _current,
         randomNumbers: _randomNumbers,
         randomNonAlpha: _randomNonAlpha);
+    final passwords = await _databaseService.getAllPasswords();
 
-    if (favorites.contains(favorite)) {
-      favorites.remove(favorite);
-      await _databaseService.deletePasswordField('${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}');
-      await _databaseService.getAllPasswords();
-      _isFavorited = false;
-    } else {
+    if (passwords.isEmpty){
       favorites.add(favorite);
-      _isFavorited = true;
       final password = PasswordModel(
-        password: '${favorite.current}-${favorite.randomNumbers}-${favorite.randomNonAlpha}',
+        password:
+        '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
       );
+      _isFavorited = true;
+
       await _databaseService.insertPasswordField(password);
+      _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
       await _databaseService.getAllPasswords();
-      // await _databaseService.dropTable();
     }
+    else{
+      //This .any will iterate through the passwords list and check if any of its elements have a password property equal to last_password.
+      if (passwords.any((p) => p.password == last_password)) {
+        favorites.remove(last_password);
+        await _databaseService.deletePasswordField(passwords.last.id!);
+        await _databaseService.getAllPasswords();
+        _isFavorited = false;
+        _lastInsertedPasswordId = -1;
+      }
+      else if (!passwords.any((p) => p.password == last_password)){
+        favorites.add(favorite);
+        _isFavorited = true;
+        final password = PasswordModel(
+          password:
+          '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
+        );
+
+        await _databaseService.insertPasswordField(password);
+        _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
+        await _databaseService.getAllPasswords();
+        // await _databaseService.deleteAllField();
+      }
+    }
+
+
     notifyListeners();
   }
 
-  void removeFromFavorites(int index) async{
-    if (index >= 0 && index < favorites.length) {
-      final favorite = favorites[index];
-      final stringToRemove = favorite.current+favorite.randomNumbers+favorite.randomNonAlpha;
-      print("string to delete: $stringToRemove");
-      favorites.removeAt(index);
-      await _databaseService.deletePasswordField(stringToRemove);
-      await _databaseService.getAllPasswords();
-      // await _databaseService.deleteAllField();
-    }
+  Future<void> removeFromFavorites(int id) async {
+    final removeFromFavList = await _databaseService.getPasswordById(id);
+    await _databaseService.deletePasswordField(id);
+    await _databaseService.getAllPasswords();
+    _passwords.removeWhere((password) => password.id == id); // remove from _passwords
+    // await _databaseService.deleteAllField();
+    favorites.remove(removeFromFavList);
+
     _isFavorited = false;
     notifyListeners();
   }
@@ -329,14 +360,40 @@ class _GeneratorPageState extends State<GeneratorPage> {
   }
 }
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
+  @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  List<PasswordModel> _passwords = [];
+  final _databaseService = DatabaseService();
+  int? _lastInsertedPasswordId;
+
+  // we want the db passwords to be initialized here with the loadpassword function
+  @override
+  void initState() {
+    super.initState();
+    _loadPasswords();
+  }
+
+// puts the all the passwords into the list _passwords
+  Future<void> _loadPasswords() async {
+    final passwords = await _databaseService.getAllPasswords();
+    setState(() {
+      _passwords = passwords;
+      if (_passwords.isNotEmpty) {
+        _lastInsertedPasswordId = _passwords.last.id;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     final appState = context.watch<MyAppState>();
-    final favorites = appState.favorites.cast<Favorite>();
 
-    if (favorites.isEmpty) {
+    if (_passwords.isEmpty) {
       return Center(
         child: Text('No favorites yet.'),
       );
@@ -352,7 +409,7 @@ class FavoritesPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: GridView.builder(
-          itemCount: appState.favorites.length,
+          itemCount: _passwords.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 1,
             childAspectRatio: 3,
@@ -360,7 +417,7 @@ class FavoritesPage extends StatelessWidget {
             crossAxisSpacing: 6,
           ),
           itemBuilder: (context, index) {
-            final favorite = appState.favorites[index];
+            final password = _passwords[index];
             return Card(
               elevation: 2,
               shadowColor: theme.colorScheme.tertiary,
@@ -370,13 +427,15 @@ class FavoritesPage extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListTile(
-                  title: Text('${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),),
-                  subtitle: Text(
-                      '${favorite.current}'),
+                  title: Text(
+                    '${password.password}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+                  ),
+                  subtitle: Text('${password.id} ${password.field}'),
                   trailing: GestureDetector(
                     onTap: () {
-                      appState.removeFromFavorites(index);
+                      appState.lastInsertedPasswordId = password.id!;
+                      appState.removeFromFavorites(password.id!);
                     },
                     child: Icon(Icons.favorite, color: Colors.red),
                   ),
@@ -441,8 +500,8 @@ class Favorite {
 
   Favorite(
       {required this.current,
-        required this.randomNumbers,
-        required this.randomNonAlpha});
+      required this.randomNumbers,
+      required this.randomNonAlpha});
 
   //When you call favorites.contains(favorite) to check if the password
   // is already in the list, the Favorite class needs to
@@ -452,11 +511,11 @@ class Favorite {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is Favorite &&
-              runtimeType == other.runtimeType &&
-              current == other.current &&
-              randomNumbers == other.randomNumbers &&
-              randomNonAlpha == other.randomNonAlpha;
+      other is Favorite &&
+          runtimeType == other.runtimeType &&
+          current == other.current &&
+          randomNumbers == other.randomNumbers &&
+          randomNonAlpha == other.randomNonAlpha;
 
   @override
   int get hashCode =>

@@ -45,6 +45,14 @@ class PasswordModel {
         password: data['password'] as String,
       );
 
+  factory PasswordModel.fromMap(Map<String, dynamic> map) {
+    return PasswordModel(
+      id: map['id'],
+      field: map['field'] as String,
+      password: map['password'],
+    );
+  }
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'field': field,

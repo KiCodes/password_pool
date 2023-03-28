@@ -5,7 +5,7 @@ import 'dart:developer';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'UserModel.dart';
+import 'PasswordModel.dart';
 
 class DatabaseService{
 
@@ -50,13 +50,11 @@ class DatabaseService{
     print("table created ${database.path}");
   }
 
-  Future<void> insertPasswordField(PasswordModel passwordModel)async{
-    final db = await _dataBaseService.database;
-    var data = await db.insert("Passwords", passwordModel.toMap());
-    log(data.toString());
-    print("Data  $data");
-
+  Future<int> insertPasswordField(PasswordModel password) async {
+    final db = await database;
+    return db.insert('Passwords', password.toMap());
   }
+
 
   Future<void> editPasswordField(PasswordModel passwordModel)async{
     final db = await _dataBaseService.database;
@@ -65,9 +63,9 @@ class DatabaseService{
     print("Updated  $Updated");
 
   }
-  Future<void> deletePasswordField(String password)async{
+  Future<void> deletePasswordField(int id)async{
     final db = await _dataBaseService.database;
-    var deleted = await db.delete("Passwords", where: 'password=?', whereArgs: [password]);
+    var deleted = await db.delete("Passwords", where: 'id=?', whereArgs: [id]);
     log(deleted.toString());
     print("deleted  $deleted");
   }
@@ -79,12 +77,25 @@ class DatabaseService{
     print("deleted");
   }
 
+  Future<PasswordModel?> getPasswordById(int id) async {
+    final db = await database;
+    final result = await db.query("Passwords",
+        where: 'id = ?', whereArgs: [id], limit: 1);
+    if (result.isNotEmpty) {
+      return PasswordModel.fromMap(result.first);
+    } else {
+      return null;
+    }
+  }
+
+
   Future<List<PasswordModel>> getAllPasswords()async{
     final db = await _dataBaseService.database;
     var data = await db.query("Passwords");
     List<PasswordModel> passwords = List.generate(data.length, (index) => PasswordModel.fromJson(data[index]));
     print(passwords.length);
     print('Printing all passwords:');
+
     for (var password in passwords) {
       print(password.password);
     }
