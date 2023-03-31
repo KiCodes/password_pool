@@ -1,11 +1,14 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:password_pool/PasswordModel.dart';
 import 'dart:math';
 import 'package:provider/provider.dart';
 
 import 'AppTheme.dart';
+import 'EditPasswordField.dart';
 import 'database_service.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -138,6 +141,7 @@ class MyAppState extends ChangeNotifier {
     return newWord;
   }
 
+
   List<Favorite> favorites = [];
   List<PasswordModel> _passwords = [];
 
@@ -160,52 +164,77 @@ class MyAppState extends ChangeNotifier {
     final passwords = await _databaseService.getAllPasswords();
     final password = PasswordModel(
       password:
-      '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
+          '${favorite.current}${favorite.randomNumbers}${favorite.randomNonAlpha}',
     );
 
-    if (passwords.isEmpty){
+    if (passwords.isEmpty) {
       favorites.add(favorite);
       _isFavorited = true;
 
       await _databaseService.insertPasswordField(password);
       _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
-      await _databaseService.getAllPasswords();
-    }
-    else{
+    } else {
       //This .any will iterate through the passwords list and check if any of its elements have a password property equal to last_password.
       if (passwords.any((p) => p.password == last_password)) {
         favorites.remove(last_password);
         _passwords.remove(password);
         await _databaseService.deletePasswordField(passwords.last.id!);
-        await _databaseService.getAllPasswords();
         _isFavorited = false;
         _lastInsertedPasswordId = -1;
-      }
-      else if (!passwords.any((p) => p.password == last_password)){
+      } else if (!passwords.any((p) => p.password == last_password)) {
         favorites.add(favorite);
         _isFavorited = true;
         await _databaseService.insertPasswordField(password);
+        final pss = await _databaseService.getAllPasswords();
+        setPasswords(pss);
         _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
-        await _databaseService.getAllPasswords();
-        // await _databaseService.deleteAllField();
       }
     }
-
 
     notifyListeners();
   }
 
-  Future<void> removeFromFavorites(int id) async {
-    final removeFromFavList = await _databaseService.getPasswordById(id);
-    await _databaseService.deletePasswordField(id);
-    await _databaseService.getAllPasswords();
-    _passwords.remove(removeFromFavList); // remove from _passwords
-    // await _databaseService.deleteAllField();
-    favorites.remove(removeFromFavList);
+  Future<void> removeFromFavorites(BuildContext context, int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Remove Password'),
+          content: Text(
+              'Are you sure you want to remove this password from favorites?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: Text('Remove'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
 
-    if(removeFromFavList?.password == last_password){
+    print(confirmed);
 
-      _isFavorited = false;
+    if (confirmed == true) {
+      print(id);
+      final removeFromFavList = await _databaseService.getPasswordById(id);
+      if (removeFromFavList != null) {
+        await _databaseService.deletePasswordField(id);
+        _passwords.remove(removeFromFavList); // remove from _passwords
+        favorites.remove(removeFromFavList!.password);
+        setPasswords(_passwords);
+
+        if (removeFromFavList!.password == last_password) {
+          _isFavorited = false;
+        }
+      }
     }
 
     notifyListeners();
@@ -223,6 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<MyAppState>(context);
+    final theme = Theme.of(context).colorScheme;
     Widget page;
     switch (selectedIndex) {
       case 0:
@@ -374,6 +404,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   final _databaseService = DatabaseService();
   int? _lastInsertedPasswordId;
 
+  bool isPasswordVisible = false;
+
   // we want the db passwords to be initialized here with the loadpassword function
   @override
   void initState() {
@@ -393,11 +425,25 @@ class _FavoritesPageState extends State<FavoritesPage> {
     });
   }
 
+  void updatePasswords(List<PasswordModel> passwords) {
+    setState(() {
+      final appState = context.read<MyAppState>();
+      appState._passwords = passwords;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     final appState = context.watch<MyAppState>();
     final appStatepasswords = appState.passwords;
+
+    void _togglePasswordVisibility(int index) {
+      setState(() {
+        appStatepasswords[index].visible = !appStatepasswords[index].visible;
+      });
+    }
 
     if (appStatepasswords.isEmpty) {
       return Center(
@@ -424,28 +470,108 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
           itemBuilder: (context, index) {
             final password = appStatepasswords[index];
-            return Card(
-              elevation: 2,
-              shadowColor: theme.colorScheme.tertiary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+            return Dismissible(
+              key: UniqueKey(),
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(right: 20.0),
+                child: Icon(Icons.delete, color: Colors.white),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ListTile(
-                  title: Text(
-                    '${password.password}',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+              onDismissed: (direction) {
+                appState.lastInsertedPasswordId = password.id!;
+                appState
+                    .removeFromFavorites(context, password.id!)
+                    .then((value) {
+                  _loadPasswords();
+                });
+              },
+              child: GestureDetector(
+                onTap: (){
+                  if(password.visible == true){
+                    // copy password to clipboard when card is tapped
+                    Clipboard.setData(ClipboardData(text: password.password));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Password copied to clipboard'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                },
+                child: Card(
+                  elevation: 2,
+                  shadowColor: theme.colorScheme.tertiary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  subtitle: Text('${password.id} ${password.field}'),
-                  trailing: GestureDetector(
-                    onTap: () {
-                      appState.lastInsertedPasswordId = password.id!;
-                      appState.removeFromFavorites(password.id!).then((value) {
-                        _loadPasswords();
-                      });
-                    },
-                    child: Icon(Icons.favorite, color: Colors.red),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                password.visible ? '${password.password}' : '•••••••••••',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 23),
+                              ),
+                              Text(
+                                '${password.field}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 19),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Center(
+                          child: Row(
+                            mainAxisSize:  MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  _togglePasswordVisibility(index);
+                                },
+                                child: Icon(
+                                  password.visible ? Icons.visibility : Icons.visibility_off,
+                                  color: theme.colorScheme.background,),
+                              ),
+                              SizedBox(width: 16,),
+                              GestureDetector(
+                                onTap: () {
+                                  // Navigate to the edit page here and pass the password object to it.
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => EditPasswordPage(
+                                          password: password,
+                                          databaseService: _databaseService,
+                                          updatePasswords: updatePasswords),
+                                    ),
+                                  );
+                                },
+                                child: Icon(Icons.edit, color: theme.iconTheme.color),
+                              ),
+                              SizedBox(width: 16),
+                              GestureDetector(
+                                onTap: () {
+                                  appState.lastInsertedPasswordId = password.id!;
+                                  appState
+                                      .removeFromFavorites(context, password.id!)
+                                      .then((value) {
+                                    _loadPasswords();
+                                  });
+                                },
+                                child: Icon(Icons.favorite, color: Colors.redAccent),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -456,6 +582,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 }
+
+
 
 // class LoginPage extends StatelessWidget{
 //

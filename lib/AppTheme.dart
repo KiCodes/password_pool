@@ -8,18 +8,17 @@ import 'constants.dart';
 ThemeData lightThemeData (BuildContext context){
   return ThemeData.light().copyWith(
 
-    primaryColor: Colors.white,
-    scaffoldBackgroundColor: Colors.teal,
-    iconTheme: IconThemeData(color: Colors.black38),
+    scaffoldBackgroundColor: kprimary,
+    iconTheme: IconThemeData(color: kdarkerblue),
     buttonTheme: ButtonThemeData(colorScheme:
     ColorScheme.light(
       background: Colors.redAccent,
-      primary: Colors.white,
+      primary: Colors.black54,
     )),
     colorScheme: ColorScheme.light(
-        background: Colors.teal,
+        background: kprimary,
         tertiary: Colors.black38,
-        primary: Colors.redAccent,
+        primary: kdarkerblue,
         secondary: Colors.white70),
   );
 
@@ -28,9 +27,8 @@ ThemeData lightThemeData (BuildContext context){
 ThemeData darkThemeData (BuildContext context){
   return ThemeData.light().copyWith(
 
-    primaryColor: Colors.redAccent,
     scaffoldBackgroundColor: kbackground,
-    iconTheme: IconThemeData(color: Colors.white70),
+    iconTheme: IconThemeData(color: kbackground),
     colorScheme: ColorScheme.dark().copyWith(
         background: kbackground,
         tertiary: Colors.black38,

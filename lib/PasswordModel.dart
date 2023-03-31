@@ -30,11 +30,13 @@ class PasswordModel {
   final int? id;
   final String field;
   final String password;
+  bool visible;
 
   PasswordModel({
     this.id,
     this.field = '',
     required this.password,
+    this.visible = false,
   });
 
   factory PasswordModel.fromJson(Map<String, dynamic> data) =>
@@ -50,6 +52,15 @@ class PasswordModel {
       id: map['id'],
       field: map['field'] as String,
       password: map['password'],
+    );
+  }
+
+  PasswordModel copyWith({int? id, String? password, String? field, bool? visible}) {
+    return PasswordModel(
+      id: id ?? this.id,
+      password: password ?? this.password,
+      field: field ?? this.field,
+      visible: visible ?? this.visible,
     );
   }
 

@@ -24,7 +24,6 @@ class DatabaseService{
     }
     //if does not exist create
     _database = await initDatabase();
-    print("no db trying to create");
     return _database!;
   }
   Future<Database> initDatabase()async{
@@ -94,11 +93,6 @@ class DatabaseService{
     var data = await db.query("Passwords");
     List<PasswordModel> passwords = List.generate(data.length, (index) => PasswordModel.fromJson(data[index]));
     print(passwords.length);
-    print('Printing all passwords:');
-
-    for (var password in passwords) {
-      print(password.password);
-    }
     return passwords;
 
   }
