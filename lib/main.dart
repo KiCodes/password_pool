@@ -9,7 +9,6 @@ import 'AppTheme.dart';
 import 'EditPasswordField.dart';
 import 'database_service.dart';
 
-
 void main() {
   runApp(MyApp());
 }
@@ -141,7 +140,6 @@ class MyAppState extends ChangeNotifier {
     return newWord;
   }
 
-
   List<Favorite> favorites = [];
   List<PasswordModel> _passwords = [];
 
@@ -269,6 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Row(
         children: [
           SafeArea(
@@ -346,50 +345,62 @@ class _GeneratorPageState extends State<GeneratorPage> {
   Widget build(BuildContext context) {
     final appState = Provider.of<MyAppState>(context);
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-            child: Text('Password Pool',
-                style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-          ),
-          SizedBox(height: 5),
-          BigCard(appState: appState),
-          SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.addToFavorites();
-                },
-                icon: Icon(
-                  appState.isFavorited ? Icons.favorite : Icons.favorite_border,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+          colors: !appState.isDarkMode
+              ? [Colors.lightBlueAccent, Colors.blue]
+              : [Colors.black12, Colors.black45],),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+              child: Text('Password Pool',
+                  style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
+            SizedBox(height: 5),
+            BigCard(appState: appState),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    appState.addToFavorites();
+                  },
+                  icon: Icon(
+                    appState.isFavorited
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                  ),
+                  label: Text(
+                    appState.isFavorited ? 'Unfavorite' : 'Favourite',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                  ),
                 ),
-                label: Text(
-                  appState.isFavorited ? 'Unfavorite' : 'Favourite',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    appState.getRandomCasing();
+                  },
+                  child: Text(
+                    'Next',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getRandomCasing();
-                },
-                child: Text(
-                  'Next',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -432,7 +443,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
@@ -452,138 +462,179 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Favorites'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: theme.colorScheme.tertiary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.topRight,
+                colors: !appState.isDarkMode
+                    ? [Colors.lightBlueAccent, Colors.blue]
+                    : [Colors.black12, Colors.black45],)),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.builder(
-          itemCount: appStatepasswords.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 1,
-            childAspectRatio: 3,
-            mainAxisSpacing: 5,
-            crossAxisSpacing: 6,
-          ),
-          itemBuilder: (context, index) {
-            final password = appStatepasswords[index];
-            return Dismissible(
-              key: UniqueKey(),
-              background: Container(
-                color: Colors.red,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(right: 20.0),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              onDismissed: (direction) {
-                appState.lastInsertedPasswordId = password.id!;
-                appState
-                    .removeFromFavorites(context, password.id!)
-                    .then((value) {
-                  _loadPasswords();
-                });
-              },
-              child: GestureDetector(
-                onTap: (){
-                  if(password.visible == true){
-                    // copy password to clipboard when card is tapped
-                    Clipboard.setData(ClipboardData(text: password.password));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Password copied to clipboard'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  }
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.topRight,
+                colors: !appState.isDarkMode
+                    ? [Colors.lightBlueAccent, Colors.blue]
+                    : [Colors.black12, Colors.black45],)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: GridView.builder(
+            itemCount: appStatepasswords.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 1,
+              childAspectRatio: 3,
+              mainAxisSpacing: 5,
+              crossAxisSpacing: 6,
+            ),
+            itemBuilder: (context, index) {
+              final password = appStatepasswords[index];
+              return Dismissible(
+                key: UniqueKey(),
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 20.0),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) {
+                  appState.lastInsertedPasswordId = password.id!;
+                  appState
+                      .removeFromFavorites(context, password.id!)
+                      .then((value) {
+                    _loadPasswords();
+                  });
                 },
-                child: Card(
-                  elevation: 2,
-                  shadowColor: theme.colorScheme.tertiary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(18.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                password.visible ? '${password.password}' : '•••••••••••',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 23),
-                              ),
-                              Text(
-                                '${password.field}',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 19),
-                              ),
-                            ],
-                          ),
+                child: GestureDetector(
+                  onTap: () {
+                    if (password.visible == true) {
+                      // copy password to clipboard when card is tapped
+                      Clipboard.setData(ClipboardData(text: password.password));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Password copied to clipboard'),
+                          duration: Duration(seconds: 1),
                         ),
-                        Center(
-                          child: Row(
-                            mainAxisSize:  MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  _togglePasswordVisibility(index);
-                                },
-                                child: Icon(
-                                  password.visible ? Icons.visibility : Icons.visibility_off,
-                                  color: theme.colorScheme.background,),
+                      );
+                    }
+                  },
+                  child: Card(
+                    elevation: 2,
+                    shadowColor: theme.colorScheme.tertiary,
+                    color: theme.colorScheme.secondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                          gradient:
+                          LinearGradient(
+                              begin: Alignment.topRight,
+                              end: Alignment.topLeft,
+                              colors: [Colors.orangeAccent, Colors.deepOrange])),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    password.visible
+                                        ? '${password.password}'
+                                        : '•••••••••••',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 23,
+                                        color: theme.colorScheme.onPrimary),
+                                  ),
+                                  Text(
+                                    '${password.field}',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 19,
+                                        color: theme.colorScheme.onPrimary),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 16,),
-                              GestureDetector(
-                                onTap: () {
-                                  // Navigate to the edit page here and pass the password object to it.
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => EditPasswordPage(
-                                          password: password,
-                                          databaseService: _databaseService,
-                                          updatePasswords: updatePasswords),
+                            ),
+                            Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      _togglePasswordVisibility(index);
+                                    },
+                                    child: Icon(
+                                      password.visible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: theme.colorScheme.error,
                                     ),
-                                  );
-                                },
-                                child: Icon(Icons.edit, color: theme.iconTheme.color),
+                                  ),
+                                  SizedBox(
+                                    width: 16,
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      // Navigate to the edit page here and pass the password object to it.
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => EditPasswordPage(
+                                              password: password,
+                                              databaseService: _databaseService,
+                                              updatePasswords: updatePasswords),
+                                        ),
+                                      );
+                                    },
+                                    child: Icon(Icons.edit,
+                                        color: theme.colorScheme.error),
+                                  ),
+                                  SizedBox(width: 16),
+                                  GestureDetector(
+                                    onTap: () {
+                                      appState.lastInsertedPasswordId =
+                                          password.id!;
+                                      appState
+                                          .removeFromFavorites(
+                                              context, password.id!)
+                                          .then((value) {
+                                        _loadPasswords();
+                                      });
+                                    },
+                                    child: Icon(Icons.favorite,
+                                        color: theme.colorScheme.error),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 16),
-                              GestureDetector(
-                                onTap: () {
-                                  appState.lastInsertedPasswordId = password.id!;
-                                  appState
-                                      .removeFromFavorites(context, password.id!)
-                                      .then((value) {
-                                    _loadPasswords();
-                                  });
-                                },
-                                child: Icon(Icons.favorite, color: Colors.redAccent),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
 }
-
-
 
 // class LoginPage extends StatelessWidget{
 //
@@ -602,8 +653,9 @@ class BigCard extends StatelessWidget {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.secondary,
-    );
+        color: theme.colorScheme.onPrimary,
+        fontSize: 30,
+        fontWeight: FontWeight.bold);
 
     return Padding(
       padding: const EdgeInsets.all(30.0),
@@ -614,14 +666,23 @@ class BigCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         elevation: 8,
-        child: Padding(
-          padding: const EdgeInsets.all(
-              16.0), // adding 16 pixels padding around the text
-          child: Text(
-            appState.current +
-                appState._randomNumbers +
-                appState._randomNonAlpha,
-            style: style,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.orangeAccent, Colors.deepOrangeAccent]),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(
+                16.0), // adding 16 pixels padding around the text
+            child: Text(
+              appState.current +
+                  appState._randomNumbers +
+                  appState._randomNonAlpha,
+              style: style,
+            ),
           ),
         ),
       ),
