@@ -11,6 +11,7 @@ ThemeData lightThemeData(BuildContext context) {
     primary: primaryColor,
     secondary: secondaryColor,
     background: lightBlue,
+    tertiary: lightGreen,
     surface: Colors.white,
     error: const Color(0xFFB00020),
     onPrimary: Colors.white,
@@ -44,13 +45,14 @@ ThemeData lightThemeData(BuildContext context) {
 }
 
 ThemeData darkThemeData(BuildContext context) {
-  final Color primaryColor = const Color(0xFF4FC3F7); // Darker blue
-  final Color secondaryColor = const Color(0xFFFFA726); // Darker orange
+  final Color primaryColor = const Color(0xFFFFA726);  // Darker blue
+  final Color secondaryColor = const Color(0xFF4FC3F7); // Darker orange
   final Color darkGrey = const Color(0xFF212121);
 
   final ColorScheme colorScheme = ColorScheme.dark(
     primary: primaryColor,
     secondary: secondaryColor,
+    tertiary: Colors.black,
     background: darkGrey,
     surface: const Color(0xFF121212),
     error: const Color(0xFFCF6679),

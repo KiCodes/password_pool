@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'AppTheme.dart';
 import 'EditPasswordField.dart';
 import 'database_service.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,51 +42,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
-int randomNumber() {
-  Random _random = Random();
-  return _random.nextInt(100);
-}
-
-String randomNonAlphaNumeric() {
-  List<String> characters = [
-    '!',
-    '@',
-    '#',
-    '\$',
-    '%',
-    '^',
-    '&',
-    '*',
-    '-',
-    '_',
-    '+',
-    '=',
-    '\\',
-    ';',
-    ':',
-    ',',
-    '.',
-    '<',
-    '>',
-    '/',
-    '?',
-    '`',
-    '~'
-  ];
-  Random random = Random();
-  int index1 = random.nextInt(characters.length);
-  int index2 = random.nextInt(characters.length);
-  while (index2 == index1) {
-    index2 = random.nextInt(characters.length);
-  }
-  return characters[index1] + characters[index2];
-}
-
 class MyAppState extends ChangeNotifier {
   String _current = WordPair.random().asPascalCase;
   String _randomNumbers = randomNumber().toString();
   String _randomNonAlpha = randomNonAlphaNumeric();
   bool _isDarkMode = false;
+  bool depth_illusion = false;
   late int? _lastInsertedPasswordId = -1;
 
   String last_password = '';
@@ -167,10 +130,9 @@ class MyAppState extends ChangeNotifier {
 
     if (passwords.isEmpty) {
       favorites.add(favorite);
-      _isFavorited = true;
-
       await _databaseService.insertPasswordField(password);
-      _lastInsertedPasswordId = password.id; // set _lastInsertedPasswordId
+      _lastInsertedPasswordId = password.id;
+      _isFavorited = true; // set _lastInsertedPasswordId
     } else {
       //This .any will iterate through the passwords list and check if any of its elements have a password property equal to last_password.
       if (passwords.any((p) => p.password == last_password)) {
@@ -266,69 +228,100 @@ class _MyHomePageState extends State<MyHomePage> {
         throw UnimplementedError('no widget for $selectedIndex');
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Row(
-        children: [
-          SafeArea(
-            child: NavigationRail(
-              extended: false,
-              destinations: [
-                NavigationRailDestination(
-                  icon: Icon(
-                    Icons.home,
-                    size: 33,
-                  ),
-                  label: Text('Home'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.favorite, size: 33),
-                  label: Text('Favorites'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.login, size: 33),
-                  label: Text('Login'),
-                ),
-              ],
-              selectedIndex: selectedIndex,
-              onDestinationSelected: (value) {
-                setState(() {
-                  selectedIndex = value;
-                });
-              },
-            ),
-          ),
-          Expanded(
-            child: Container(
-              color: Theme.of(context).colorScheme.background,
-              child: page,
-            ),
-          ),
-        ],
+    return Neumorphic(
+      style: NeumorphicStyle(
+        boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(22)),
+        depth: 3,
+        lightSource: LightSource.topLeft,
+        color: !appState.isDarkMode ? Colors.lightBlueAccent : Colors.black12,
       ),
-      // switch theme
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Row(
           children: [
-            Padding(
-              padding: EdgeInsets.only(left: 16.0),
-              child: Text(
-                Theme.of(context).brightness == Brightness.light
-                    ? 'Light Theme'
-                    : 'Dark Theme',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18.0,
-                ),
+            SafeArea(
+              child: NavigationRail(
+                backgroundColor: theme.tertiary,
+                extended: false,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: NeumorphicIcon(Icons.home,
+                        size: 33,
+                        style: NeumorphicStyle(
+                          color:
+                              selectedIndex == 0 ? theme.primary : Colors.white,
+                          depth: selectedIndex == 0 ? 0 : 3,
+                          shape: NeumorphicShape.flat,
+                          intensity: 7,
+                        )),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: NeumorphicIcon(Icons.favorite,
+                        size: 33,
+                        style: NeumorphicStyle(
+                          color:
+                              selectedIndex == 1 ? theme.primary : Colors.white,
+                          depth: selectedIndex == 1 ? 0 : 3,
+                          shape: NeumorphicShape.flat,
+                          intensity: 7,
+                        )),
+                    label: Text('Favorites'),
+                  ),
+                  NavigationRailDestination(
+                    icon: NeumorphicIcon(Icons.login,
+                        size: 33,
+                        style: NeumorphicStyle(
+                          color:
+                              selectedIndex == 2 ? theme.primary : Colors.white,
+                          depth: selectedIndex == 2 ? 0 : 3,
+                          shape: NeumorphicShape.flat,
+                          intensity: 7,
+                        )),
+                    label: Text('Login'),
+                  ),
+                ],
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) {
+                  setState(() {
+                    selectedIndex = value;
+                  });
+                },
               ),
             ),
-            Switch(
-                value: appState.isDarkMode,
-                onChanged: (bool value) {
-                  appState.switchTheme();
-                }),
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.background,
+                child: page,
+              ),
+            ),
           ],
+        ),
+        // switch theme
+        bottomNavigationBar: BottomAppBar(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(left: 16.0),
+                child: Text(
+                  Theme.of(context).brightness == Brightness.light
+                      ? 'Light Theme'
+                      : 'Dark Theme',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18.0,
+                  ),
+                ),
+              ),
+              Switch(
+                  value: appState.isDarkMode,
+                  onChanged: (bool value) {
+                    appState.switchTheme();
+                  },
+                  activeColor: theme.primary),
+            ],
+          ),
         ),
       ),
     );
@@ -348,16 +341,29 @@ class _GeneratorPageState extends State<GeneratorPage> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.topRight,
+          begin: Alignment.topLeft,
+          end: Alignment.topRight,
           colors: !appState.isDarkMode
               ? [Colors.lightBlueAccent, Colors.blue]
-              : [Colors.black12, Colors.black45],),
+              : [Colors.black12, Colors.black45],
+        ),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            !appState.isDarkMode
+                ? Image.asset(
+                    'assets/images/default.e71d14e.png',
+                    height: 190,
+                    // Change the color here
+                  )
+                : Image.asset(
+                    'assets/images/2689199.png',
+                    height: 190,
+                    // Change the color here
+                  ),
+            SizedBox(height: 60),
             Container(
               padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
               child: Text('Password Pool',
@@ -415,8 +421,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
   final _databaseService = DatabaseService();
   int? _lastInsertedPasswordId;
 
-  bool isPasswordVisible = false;
-
   // we want the db passwords to be initialized here with the loadpassword function
   @override
   void initState() {
@@ -455,6 +459,42 @@ class _FavoritesPageState extends State<FavoritesPage> {
       });
     }
 
+    void _toggleEditIllusion(int index) {
+      setState(() {
+        appStatepasswords[index].editing = !appStatepasswords[index].editing;
+      });
+    }
+
+    void _handleModalBottomSheetDismissed(BuildContext context) {
+      // Find the index of the password that was being edited
+      int index = appStatepasswords.indexWhere((password) => password.editing);
+
+      if (index >= 0) {
+        // Change the editing property of the corresponding password object
+        setState(() {
+          appStatepasswords[index].editing = false;
+        });
+      }
+    }
+
+    void _toggleHeartIllusion(int index) {
+      setState(() {
+        appStatepasswords[index].heart = !appStatepasswords[index].heart;
+      });
+    }
+
+    void _HeartRemoveButtonUI(BuildContext context) {
+      // Find the index of the password that was being edited
+      int index = appStatepasswords.indexWhere((password) => password.heart);
+
+      if (index >= 0) {
+        // Change the editing property of the corresponding password object
+        setState(() {
+          appStatepasswords[index].heart = false;
+        });
+      }
+    }
+
     if (appStatepasswords.isEmpty) {
       return Center(
         child: Text('No favorites yet.'),
@@ -471,29 +511,31 @@ class _FavoritesPageState extends State<FavoritesPage> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.topRight,
-                colors: !appState.isDarkMode
-                    ? [Colors.lightBlueAccent, Colors.blue]
-                    : [Colors.black12, Colors.black45],)),
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+            colors: !appState.isDarkMode
+                ? [Colors.lightBlueAccent, Colors.blue]
+                : [Colors.black12, Colors.black45],
+          )),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
             gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.topRight,
-                colors: !appState.isDarkMode
-                    ? [Colors.lightBlueAccent, Colors.blue]
-                    : [Colors.black12, Colors.black45],)),
+          begin: Alignment.topLeft,
+          end: Alignment.topRight,
+          colors: !appState.isDarkMode
+              ? [Colors.lightBlueAccent, Colors.blue]
+              : [Colors.black12, Colors.black45],
+        )),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(10),
           child: GridView.builder(
             itemCount: appStatepasswords.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 1,
-              childAspectRatio: 3,
-              mainAxisSpacing: 5,
+              childAspectRatio: 2,
+              mainAxisSpacing: 10,
               crossAxisSpacing: 6,
             ),
             itemBuilder: (context, index) {
@@ -530,98 +572,163 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   child: Card(
                     elevation: 2,
                     shadowColor: theme.colorScheme.tertiary,
-                    color: theme.colorScheme.secondary,
+                    color: theme.colorScheme.primary.withOpacity(0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(22),
-                          gradient:
-                          LinearGradient(
-                              begin: Alignment.topRight,
-                              end: Alignment.topLeft,
-                              colors: [Colors.orangeAccent, Colors.deepOrange])),
-                      child: Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    password.visible
-                                        ? '${password.password}'
-                                        : '•••••••••••',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 23,
-                                        color: theme.colorScheme.onPrimary),
-                                  ),
-                                  Text(
-                                    '${password.field}',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 19,
-                                        color: theme.colorScheme.onPrimary),
-                                  ),
-                                ],
-                              ),
+                      ),
+                      child: Neumorphic(
+                        style: NeumorphicStyle(
+                            boxShape: NeumorphicBoxShape.roundRect(
+                                BorderRadius.circular(22)),
+                            depth: 3,
+                            lightSource: LightSource.bottom,
+                            border: NeumorphicBorder(
+                              width: 4.3,
+                              color:
+                                  theme.colorScheme.onPrimary.withOpacity(0.5),
+                              isEnabled: !password.visible ? true : false,
                             ),
-                            Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      _togglePasswordVisibility(index);
-                                    },
-                                    child: Icon(
-                                      password.visible
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
-                                      color: theme.colorScheme.error,
+                            color: theme.colorScheme.primary.withOpacity(0.8)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(18.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: theme.colorScheme.secondary
+                                            .withOpacity(0.3),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Text(
+                                          password.visible
+                                              ? '${password.password}'
+                                              : '•••••••••••',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 23,
+                                              color: theme.colorScheme.onPrimary),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 16,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      // Navigate to the edit page here and pass the password object to it.
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) => EditPasswordPage(
+                                    Text(
+                                      '${password.field}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 19,
+                                          color: theme.colorScheme.onPrimary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Center(
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        _togglePasswordVisibility(index);
+                                      },
+                                      child: NeumorphicIcon(
+                                        password.visible
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                        size: 22,
+                                        style: NeumorphicStyle(
+                                          color: !appState.isDarkMode
+                                              ? Color(0xFFFFFFFF)
+                                              : Color(0x8A000000),
+                                          depth: 3,
+                                          shape: NeumorphicShape.flat,
+                                          disableDepth:
+                                              password.visible ? true : false,
+                                          intensity: 33,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 15,
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        _toggleEditIllusion(index);
+                                        showModalBottomSheet(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return EditPasswordPage(
                                               password: password,
                                               databaseService: _databaseService,
-                                              updatePasswords: updatePasswords),
+                                              updatePasswords: updatePasswords,
+                                            );
+                                          },
+                                        ).then((value) {
+                                          _handleModalBottomSheetDismissed(
+                                              context);
+                                        });
+                                      },
+                                      child: NeumorphicIcon(
+                                        Icons.edit,
+                                        size: 22,
+                                        style: NeumorphicStyle(
+                                          color: !appState.isDarkMode
+                                              ? Color(0xFFFFFFFF)
+                                              : Color(0x8A000000),
+                                          depth: 3,
+                                          shape: NeumorphicShape.flat,
+                                          disableDepth:
+                                              password.editing ? true : false,
+                                          intensity: 33,
                                         ),
-                                      );
-                                    },
-                                    child: Icon(Icons.edit,
-                                        color: theme.colorScheme.error),
-                                  ),
-                                  SizedBox(width: 16),
-                                  GestureDetector(
-                                    onTap: () {
-                                      appState.lastInsertedPasswordId =
-                                          password.id!;
-                                      appState
-                                          .removeFromFavorites(
-                                              context, password.id!)
-                                          .then((value) {
-                                        _loadPasswords();
-                                      });
-                                    },
-                                    child: Icon(Icons.favorite,
-                                        color: theme.colorScheme.error),
-                                  ),
-                                ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 15),
+                                    GestureDetector(
+                                      onTap: () {
+                                        _toggleHeartIllusion(index);
+                                        appState.lastInsertedPasswordId =
+                                            password.id!;
+                                        appState
+                                            .removeFromFavorites(
+                                                context, password.id!)
+                                            .then((value) {
+                                          _loadPasswords();
+                                          _HeartRemoveButtonUI(context);
+                                        });
+                                      },
+                                      child: NeumorphicIcon(
+                                        Icons.favorite,
+                                        size: 22,
+                                        style: NeumorphicStyle(
+                                          color: !appState.isDarkMode
+                                              ? Color(0xFFFFFFFF)
+                                              : Color(0x8A000000),
+                                          depth: 3,
+                                          shape: NeumorphicShape.flat,
+                                          disableDepth:
+                                              password.heart ? true : false,
+                                          intensity: 33,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -717,4 +824,44 @@ class Favorite {
   @override
   int get hashCode =>
       current.hashCode ^ randomNumbers.hashCode ^ randomNonAlpha.hashCode;
+}
+
+int randomNumber() {
+  Random _random = Random();
+  return _random.nextInt(100);
+}
+
+String randomNonAlphaNumeric() {
+  List<String> characters = [
+    '!',
+    '@',
+    '#',
+    '\$',
+    '%',
+    '^',
+    '&',
+    '*',
+    '-',
+    '_',
+    '+',
+    '=',
+    '\\',
+    ';',
+    ':',
+    ',',
+    '.',
+    '<',
+    '>',
+    '/',
+    '?',
+    '`',
+    '~'
+  ];
+  Random random = Random();
+  int index1 = random.nextInt(characters.length);
+  int index2 = random.nextInt(characters.length);
+  while (index2 == index1) {
+    index2 = random.nextInt(characters.length);
+  }
+  return characters[index1] + characters[index2];
 }

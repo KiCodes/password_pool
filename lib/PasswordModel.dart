@@ -31,12 +31,16 @@ class PasswordModel {
   final String field;
   final String password;
   bool visible;
+  bool editing;
+  bool heart;
 
   PasswordModel({
     this.id,
     this.field = '',
     required this.password,
     this.visible = false,
+    this.editing = false,
+    this.heart = false,
   });
 
   factory PasswordModel.fromJson(Map<String, dynamic> data) =>
@@ -61,6 +65,8 @@ class PasswordModel {
       password: password ?? this.password,
       field: field ?? this.field,
       visible: visible ?? this.visible,
+      editing: editing ?? this.editing,
+      heart: heart ?? this.heart,
     );
   }
 
