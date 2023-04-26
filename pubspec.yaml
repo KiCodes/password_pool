@@ -39,6 +39,9 @@ dependencies:
   uuid: ^3.0.7
   flutter_neumorphic: ^3.0.3
   flutter_svg: ^0.22.0
+  local_auth: ^2.1.6
+  shared_preferences: ^2.1.0
+  flutter_screen_lock: ^9.0.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +67,7 @@ flutter:
   assets:
     - assets/images/default.e71d14e.png
     - assets/images/2689199.png
+    - assets/images/password_pool_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

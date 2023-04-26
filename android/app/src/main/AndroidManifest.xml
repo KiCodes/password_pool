@@ -3,7 +3,7 @@
    <application
         android:label="password_pool"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/password_pool_logo">
         <activity
             android:name=".MainActivity"
             android:exported="true"

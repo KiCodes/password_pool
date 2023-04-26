@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'constants.dart';
+import '../utils/constants.dart';
 
 ThemeData lightThemeData(BuildContext context) {
   final Color primaryColor = const Color(0xFF4FC3F7); // Darker blue
@@ -18,7 +18,9 @@ ThemeData lightThemeData(BuildContext context) {
     onSecondary: Colors.black,
     onBackground: Colors.black,
     onSurface: Colors.black,
+    inverseSurface: Colors.white,
     onError: Colors.white,
+    inversePrimary: Colors.blue,
     brightness: Brightness.light,
   );
 
@@ -59,6 +61,8 @@ ThemeData darkThemeData(BuildContext context) {
     onPrimary: Colors.black,
     onSecondary: Colors.black,
     onBackground: Colors.white,
+    inversePrimary: primaryColor,
+    inverseSurface: Colors.white,
     onSurface: Colors.white,
     onError: Colors.black,
     brightness: Brightness.dark,
