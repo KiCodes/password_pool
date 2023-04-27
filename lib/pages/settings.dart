@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
@@ -5,7 +7,6 @@ import 'package:password_pool/main.dart';
 import 'package:password_pool/utils/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -28,28 +29,26 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadState() async {
-    final appState = context.read<MyAppState>();
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isPasswordEnabled = prefs.getBool('isPasswordEnabled') ?? false;
       lockpass = prefs.getString('lockpass') ?? '';
-      appState.isPasswordEnabled = _isPasswordEnabled;
-      appState.lockpass = lockpass;
+      print(lockpass);
     });
   }
 
-  Future<void> _saveState() async {
-    final appState = context.read<MyAppState>();
+  Future<void> _saveState(lockpass) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isPasswordEnabled', _isPasswordEnabled);
-    appState.isPasswordEnabled = _isPasswordEnabled;
     await prefs.setString('lockpass', lockpass);
+    print(lockpass);
   }
 
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<MyAppState>();
     var theme = Theme.of(context);
+    double maxWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
         appBar: AppBar(
@@ -59,12 +58,13 @@ class _SettingsPageState extends State<SettingsPage> {
         body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.topRight,
-                colors: !appState.isDarkMode
-                    ? [Colors.lightBlueAccent, Colors.blue]
-                    : [Colors.black12, Colors.black45],
-              )),
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+            colors: !appState.isDarkMode
+                ? [Colors.lightBlueAccent, Colors.blue]
+                : [Colors.black12, Colors.black45],
+          )),
+          width: MediaQuery.of(context).size.width,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -72,10 +72,10 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 const Text(
                   'Version',
-                    style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -83,62 +83,109 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(fontSize: 15, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
-                SingleChildScrollView(
-                  child: Row(
-                    children: [
-                      Text('Password',
-                        style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),),
-                      SizedBox(width: 23,),
-                      TextButton.icon(
-                        label: Padding(
-                          padding: const EdgeInsets.all(3.0),
-                          child: Text(
-                            _isPasswordEnabled ? 'Enabled' : 'Disabled',
-                            style: TextStyle(
-                              color: _isPasswordEnabled ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
+                LayoutBuilder(builder: (context, snapshot) {
+                  if (maxWidth > 300) {
+                    return SingleChildScrollView(
+                      child: Row(
+                        children: [
+                          buildText(),
+                          SizedBox(
+                            width: 16,
                           ),
-                        ),
-                        icon: Icon(Icons.key, color: !appState.isDarkMode ? theme.colorScheme.inverseSurface : theme.colorScheme.primary,),
-                        style: TextButton.styleFrom(
-                          backgroundColor: appState.isDarkMode ? Colors.white : Colors.white54,
-                          shadowColor: Colors.black,
-                          elevation: 5,
-                        ),
-                        onPressed: () {
-                          if (_isPasswordEnabled == false) {
-                            showDialog(
-                              context: context,
-                              builder: (_) => _showLockPassword(),
-                            ).then((value) {
-                              // Refresh the state after closing the dialog
-                              _loadState();
-                            });
-                          } else {
-                            setState(() {
-                              _isPasswordEnabled = false;
-                              _saveState();
-                            });
-                          }
-                        },
+                          buildTextButton(appState, theme, context),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    );
+                  } else {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildText(),
+                        SizedBox(
+                          height: 23,
+                        ),
+                        buildTextButton(appState, theme, context),
+                      ],
+                    );
+                  }
+                }),
               ],
             ),
           ),
         ));
   }
 
+  TextButton buildTextButton(
+      MyAppState appState, ThemeData theme, BuildContext context) {
+    return TextButton.icon(
+      label: Padding(
+        padding: const EdgeInsets.all(3.0),
+        child: Text(
+          _isPasswordEnabled ? 'Enabled' : 'Disabled',
+          style: TextStyle(
+            color: _isPasswordEnabled ? Colors.green : Colors.red,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+      ),
+      icon: Icon(
+        Icons.key,
+        color: !appState.isDarkMode
+            ? theme.colorScheme.inverseSurface
+            : theme.colorScheme.primary,
+      ),
+      style: TextButton.styleFrom(
+        backgroundColor: appState.isDarkMode ? Colors.white : Colors.white54,
+        shadowColor: Colors.black,
+        elevation: 5,
+      ),
+      onPressed: () {
+        if (_isPasswordEnabled == false) {
+          showDialog(
+            context: context,
+            builder: (_) => _showLockPassword(),
+          ).then((value) {
+            // Refresh the state after closing the dialog
+            _loadState();
+          });
+        } else {
+          _loadState();
+          showDialog(
+              context: context,
+              builder: (_) =>
+              ScreenLock(
+            correctString: lockpass,
+            // set the correct PIN
+            onUnlocked: () {
+              setState(() {
+                _isPasswordEnabled = false;
+                Navigator.of(context).pop();// set the state to unlocked when correct PIN is entered
+              });
+            },
+          ));
+          // setState(() {
+          //   _isPasswordEnabled = false;
+          //   _saveState('');
+          // });
+        }
+      },
+    );
+  }
+
+  Text buildText() {
+    return Text(
+      'Password',
+      style: TextStyle(
+          fontSize: 20.0, fontWeight: FontWeight.bold, color: Colors.white),
+      textAlign: TextAlign.right,
+    );
+  }
+
   Widget _showLockPassword() {
     return AlertDialog(
       title: Text(Texts.pass_lock),
+      scrollable: true,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -217,9 +264,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   _isPasswordEnabled = true;
                   _password = _confirmPassword;
                   lockpass = _password;
+                  _saveState(lockpass);
+                  print(lockpass);
                 });
-
-                _saveState();
 
                 final appState = context.read<MyAppState>();
                 appState.isPasswordEnabled = true;

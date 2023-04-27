@@ -292,19 +292,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     else{
                       if(maxWidth >= 1024){
                         print(maxWidth);
-                        return buildNavigationRail(theme, 77.0, 40.0, 0.0);
+                        return buildNavigationRail(theme, 90.0, 55.0, 0.0);
                       }
                       if(maxWidth >= 768){
                         print(maxWidth);
-                        return buildNavigationRail(theme, 70.0, 40.0, 0.0);
+                        return buildNavigationRail(theme, 90.0, 55.0, 0.0);
                       }
                       if(maxWidth >= 480){
                         print(maxWidth);
-                        return buildNavigationRail(theme, 57.0, 34.0, 0.0);
+                        return buildNavigationRail(theme, 77.0, 34.0, 0.0);
                       }
                       if(maxWidth >= 200){
                         print(maxWidth);
-                        return buildNavigationRail(theme, 57.0, 34.0, 0.0);
+                        return buildNavigationRail(theme, 57.0, 34.0, -1.0);
                       }
                       else{
                         print(maxWidth);
@@ -434,17 +434,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   void initState() {
     super.initState();
-    _loadPasswords();
     _loadState();
+    _loadPasswords();
   }
   Future<void> _loadState() async {
-    final appState = context.read<MyAppState>();
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isPasswordEnabled = prefs.getBool('isPasswordEnabled') ?? false;
       lockpass = prefs.getString('lockpass') ?? '';
-      appState.isPasswordEnabled = _isPasswordEnabled;
-      appState.lockpass = lockpass;
+      print("${lockpass} ii");
     });
   }
 
@@ -526,11 +524,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
     return _isPasswordEnabled // check if the screen is locked
         ? ScreenLock(
-      correctString: lockpass!,
+      correctString: lockpass,
       // set the correct PIN
       onUnlocked: () {
         setState(() {
-          _isPasswordEnabled = false; // set the state to unlocked when correct PIN is entered
+          _isPasswordEnabled = false;// set the state to unlocked when correct PIN is entered
         });
       },
     )
@@ -556,20 +554,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (maxWidth >= 1024) {
-            print(maxWidth);
-            return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 28.0, 24.0, 390.0);
+
+            return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 47.0, 45.0, 350.0);
           } else if (maxWidth >= 768) {
-            print(maxWidth);
-            return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 26.0, 22.0, 350.0);
+
+            return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 44.0, 44.0, 350.0);
           } else if (maxWidth >= 480) {
-            print(maxWidth);
+
             return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 22.0, 20.0, 330.0);
           }else if (maxWidth >= 250) {
-            print(maxWidth);
+
             return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 22.0, 18.0, 270.0);
           }
           else {
-            print(maxWidth);
+
             return buildContainer(appState, appStatepasswords, theme, _togglePasswordVisibility, _toggleEditIllusion, _handleModalBottomSheetDismissed, _toggleHeartIllusion, _HeartRemoveButtonUI, 12.0, 18.0, 270.0);
           }
         }
