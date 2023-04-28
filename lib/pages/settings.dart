@@ -52,7 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Settings'),
+          title: Text(Texts.settings),
           backgroundColor: theme.colorScheme.primary,
         ),
         body: Container(
@@ -70,8 +70,8 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Version',
+                Text(
+                  Texts.version,
                   style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '1.0.0',
+                  Texts.versionNum,
                   style: TextStyle(fontSize: 15, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
@@ -121,7 +121,7 @@ class _SettingsPageState extends State<SettingsPage> {
       label: Padding(
         padding: const EdgeInsets.all(3.0),
         child: Text(
-          _isPasswordEnabled ? 'Enabled' : 'Disabled',
+          _isPasswordEnabled ? Texts.enabled : Texts.disabled,
           style: TextStyle(
             color: _isPasswordEnabled ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
@@ -153,17 +153,17 @@ class _SettingsPageState extends State<SettingsPage> {
           _loadState();
           showDialog(
               context: context,
-              builder: (_) =>
-              ScreenLock(
-            correctString: lockpass,
-            // set the correct PIN
-            onUnlocked: () {
-              setState(() {
-                _isPasswordEnabled = false;
-                Navigator.of(context).pop();// set the state to unlocked when correct PIN is entered
-              });
-            },
-          ));
+              builder: (_) => ScreenLock(
+                    correctString: lockpass,
+                    // set the correct PIN
+                    onUnlocked: () {
+                      setState(() {
+                        _isPasswordEnabled = false;
+                        Navigator.of(context)
+                            .pop(); // set the state to unlocked when correct PIN is entered
+                      });
+                    },
+                  ));
           // setState(() {
           //   _isPasswordEnabled = false;
           //   _saveState('');
@@ -175,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Text buildText() {
     return Text(
-      'Password',
+      Texts.password,
       style: TextStyle(
           fontSize: 20.0, fontWeight: FontWeight.bold, color: Colors.white),
       textAlign: TextAlign.right,
@@ -273,8 +273,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 appState.lockpass = _password;
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password Lock Enabled!'),
+                  SnackBar(
+                    content: Text(Texts.pass_enabled),
                   ),
                 );
 
@@ -282,13 +282,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Passwords do not match!'),
+                  SnackBar(
+                    content: Text(Texts.dontmatch),
                   ),
                 );
               }
             },
-            child: const Text('Submit'),
+            child: Text(Texts.submit),
           ),
         ],
       ),

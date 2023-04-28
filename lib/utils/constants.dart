@@ -28,4 +28,13 @@ class Texts {
   static final step3_ins = 'Label, Edit and Delete passwords';
   static final logo = 'assets/images/password_pool_logo.png';
   static final pass_lock = "Password Lock";
+  static final settings = 'Settings';
+  static final version = 'Version';
+  static final versionNum = '1.0.0';
+  static final enabled = 'Enabled';
+  static final disabled = 'Disabled';
+  static final password = 'Password';
+  static final dontmatch = 'Passwords do not match!';
+  static final submit = 'Submit';
+  static final pass_enabled = 'Password Lock Enabled!';
 }
