@@ -1,16 +1,5 @@
 # password_pool
 
-A new Flutter project.
+"Password Pool" is a secure and user-friendly password manager app that allows you to easily generate, store and label your passwords. With its sleek and modern design, the app provides a simple interface for managing your passwords on the go.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The password generator feature enables you to generate unique and complex passwords with just a few taps, ensuring that your online accounts stay safe and secure. You can save these passwords and organize them into customizable categories, making it easy to find and use them whenever you need them.
